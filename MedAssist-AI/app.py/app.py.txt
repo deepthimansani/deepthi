@@ -1,0 +1,500 @@
+# ==========================================================
+# 🏥 MEDASSIST AI - CLEAN PROFESSIONAL UI
+# Fully Visible Bright Dark-Green Interface
+# Gemini + Gradio
+# ==========================================================
+
+# Install Libraries
+!pip install -q google-genai gradio pillow
+
+import gradio as gr
+from google import genai
+from datetime import datetime
+
+# ==========================================================
+# 🔑 GEMINI API
+# ==========================================================
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+client = genai.Client(api_key=API_KEY)
+
+# ==========================================================
+# 🧠 SYSTEM PROMPT
+# ==========================================================
+
+SYSTEM_PROMPT = """
+You are MedAssist AI — a professional AI assistant
+for doctors, hospitals, clinics, and medical students.
+
+Responsibilities:
+- Explain diseases
+- Analyze symptoms
+- Explain treatments
+- Analyze medical images
+- Summarize reports
+- Provide medical education
+
+Rules:
+- Be professional
+- Use headings and bullet points
+- Never replace licensed doctors
+- Mention limitations when needed
+
+Always end with:
+⚠️ This AI is for educational and support purposes only.
+"""
+
+# ==========================================================
+# 🤖 AI FUNCTION
+# ==========================================================
+
+def medical_ai(question, image, department):
+
+    try:
+
+        contents = []
+
+        # Upload image if available
+        if image:
+            uploaded_file = client.files.upload(file=image)
+            contents.append(uploaded_file)
+
+        contents.append(f"""
+Department: {department}
+
+Question:
+{question}
+""")
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=contents,
+            config={
+                "system_instruction": SYSTEM_PROMPT,
+                "temperature": 0.4
+            }
+        )
+
+        time_now = datetime.now().strftime("%I:%M %p")
+
+        return f"""
+# 🩺 MedAssist AI Response
+
+⏰ {time_now}
+
+{response.text}
+"""
+
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+# ==========================================================
+# 💬 CHAT FUNCTION
+# ==========================================================
+
+def chat_function(message, history):
+
+    response = medical_ai(
+        message,
+        None,
+        "General Medicine"
+    )
+
+    history.append((message, response))
+
+    return "", history
+
+# ==========================================================
+# 🎨 CLEAN PROFESSIONAL CSS
+# ==========================================================
+
+custom_css = """
+
+/* Main Background */
+.gradio-container {
+
+    max-width: 100% !important;
+
+    background:
+    linear-gradient(
+        135deg,
+        #e8fff1 0%,
+        #d8fce7 50%,
+        #c7f9d4 100%
+    );
+
+    min-height: 100vh;
+
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Header */
+.main-header {
+
+    background:
+    linear-gradient(
+        90deg,
+        #166534,
+        #15803d,
+        #16a34a
+    );
+
+    padding: 30px;
+
+    text-align: center;
+
+    border-radius: 0px 0px 25px 25px;
+
+    box-shadow:
+    0px 4px 20px rgba(0,0,0,0.2);
+}
+
+.main-title {
+
+    font-size: 50px;
+
+    font-weight: bold;
+
+    color: white;
+}
+
+.sub-title {
+
+    font-size: 18px;
+
+    color: #dcfce7;
+
+    margin-top: 8px;
+}
+
+/* Cards */
+.block {
+
+    background: white !important;
+
+    border-radius: 22px !important;
+
+    border:
+    1px solid #bbf7d0 !important;
+
+    box-shadow:
+    0px 4px 18px rgba(0,0,0,0.08);
+
+    padding: 18px !important;
+}
+
+/* Labels */
+label {
+
+    color: #14532d !important;
+
+    font-weight: 700 !important;
+
+    font-size: 16px !important;
+}
+
+/* Textboxes */
+textarea,
+input {
+
+    background: #f0fdf4 !important;
+
+    color: #14532d !important;
+
+    border:
+    1px solid #86efac !important;
+
+    border-radius: 15px !important;
+
+    padding: 12px !important;
+}
+
+/* Placeholder */
+textarea::placeholder {
+
+    color: #4b5563 !important;
+}
+
+/* Dropdown */
+select {
+
+    background: #f0fdf4 !important;
+
+    color: #14532d !important;
+
+    border-radius: 15px !important;
+
+    border:
+    1px solid #86efac !important;
+}
+
+/* Buttons */
+button {
+
+    background:
+    linear-gradient(
+        90deg,
+        #15803d,
+        #16a34a
+    ) !important;
+
+    color: white !important;
+
+    border: none !important;
+
+    border-radius: 15px !important;
+
+    font-weight: bold !important;
+
+    transition: 0.3s !important;
+}
+
+button:hover {
+
+    transform: scale(1.03);
+
+    background:
+    linear-gradient(
+        90deg,
+        #16a34a,
+        #22c55e
+    ) !important;
+}
+
+/* Markdown */
+.markdown {
+
+    color: #14532d !important;
+}
+
+/* Chatbot */
+.message {
+
+    border-radius: 15px !important;
+}
+
+/* Accordion */
+.accordion {
+
+    background: white !important;
+
+    border-radius: 18px !important;
+
+    border:
+    1px solid #bbf7d0 !important;
+}
+
+/* Footer */
+.footer {
+
+    text-align: center;
+
+    padding: 20px;
+
+    color: #14532d;
+
+    font-weight: 500;
+}
+"""
+
+# ==========================================================
+# 🏥 UI
+# ==========================================================
+
+with gr.Blocks(
+    css=custom_css,
+    theme=gr.themes.Soft()
+) as demo:
+
+    # ======================================================
+    # HEADER
+    # ======================================================
+
+    gr.HTML("""
+    <div class="main-header">
+
+        <div class="main-title">
+            🏥 MedAssist AI
+        </div>
+
+        <div class="sub-title">
+            Advanced Medical Doctor Assistant Powered by Gemini AI
+        </div>
+
+    </div>
+    """)
+
+    # ======================================================
+    # MAIN SECTION
+    # ======================================================
+
+    with gr.Row():
+
+        # LEFT SIDE
+        with gr.Column(scale=1):
+
+            department = gr.Dropdown(
+                choices=[
+                    "General Medicine",
+                    "Cardiology",
+                    "Neurology",
+                    "Dermatology",
+                    "Radiology",
+                    "Pediatrics",
+                    "Orthopedics",
+                    "Psychiatry",
+                    "Emergency Medicine",
+                    "Oncology"
+                ],
+                value="General Medicine",
+                label="🏥 Select Department"
+            )
+
+            image_input = gr.Image(
+                type="filepath",
+                label="🖼 Upload Medical Image"
+            )
+
+            question = gr.Textbox(
+                lines=10,
+                label="💬 Ask Medical Question",
+                placeholder="""
+Examples:
+
+• Explain symptoms of diabetes
+• Analyze this X-ray
+• Explain chest pain causes
+• Summarize this report
+• Explain MRI findings
+                """
+            )
+
+            analyze_btn = gr.Button(
+                "🔍 Analyze with AI",
+                variant="primary"
+            )
+
+        # RIGHT SIDE
+        with gr.Column(scale=1):
+
+            output = gr.Markdown("""
+# 👨‍⚕️ Welcome to MedAssist AI
+
+### Features
+
+✅ Medical Image Analysis  
+✅ Disease Explanation  
+✅ Differential Diagnosis  
+✅ Medical Report Summary  
+✅ Clinical Assistance  
+✅ AI Medical Chat  
+
+Upload images and ask questions.
+""")
+
+    # ======================================================
+    # CHATBOT SECTION
+    # ======================================================
+
+    gr.Markdown("## 💬 Interactive AI Medical Chat")
+
+    chatbot = gr.Chatbot(
+        height=450,
+        bubble_full_width=False
+    )
+
+    with gr.Row():
+
+        msg = gr.Textbox(
+            placeholder="Ask medical questions...",
+            scale=8
+        )
+
+        send_btn = gr.Button(
+            "Send",
+            scale=1
+        )
+
+    clear_btn = gr.Button("🗑 Clear Chat")
+
+    # ======================================================
+    # KNOWLEDGE SECTION
+    # ======================================================
+
+    with gr.Accordion("📚 Medical Knowledge Center", open=False):
+
+        gr.Markdown("""
+# 🧠 MedAssist AI Capabilities
+
+### 🩺 Clinical Support
+- Disease explanations
+- Symptom analysis
+- Drug information
+- Treatment overview
+
+### 🖼 Imaging
+- X-Ray support
+- MRI explanations
+- CT scan understanding
+
+### 📋 Reports
+- Patient summaries
+- Lab report explanation
+- Clinical note assistance
+
+⚠️ This AI supports healthcare professionals and students.
+""")
+
+    # ======================================================
+    # FOOTER
+    # ======================================================
+
+    gr.HTML("""
+    <div class="footer">
+        © 2026 MedAssist AI • Healthcare Intelligence Platform
+    </div>
+    """)
+
+    # ======================================================
+    # ACTIONS
+    # ======================================================
+
+    analyze_btn.click(
+        medical_ai,
+        inputs=[
+            question,
+            image_input,
+            department
+        ],
+        outputs=output
+    )
+
+    send_btn.click(
+        chat_function,
+        inputs=[msg, chatbot],
+        outputs=[msg, chatbot]
+    )
+
+    msg.submit(
+        chat_function,
+        inputs=[msg, chatbot],
+        outputs=[msg, chatbot]
+    )
+
+    clear_btn.click(
+        lambda: None,
+        None,
+        chatbot,
+        queue=False
+    )
+
+# ==========================================================
+# 🚀 LAUNCH
+# ==========================================================
+
+demo.launch(
+    debug=True,
+    share=True,
+    inline=False
+)
